@@ -47,7 +47,7 @@ jobs:
       run: adb exec-out screencap -p > $GITHUB_WORKSPACE/emulator-screenshot.png
 
     - name: Upload screenshot to artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.6.0
       with:
         name: emulator-screenshot
         path: $GITHUB_WORKSPACE/emulator-screenshot.png
