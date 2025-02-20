@@ -1,0 +1,53 @@
+name: Android Emulator
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+
+    - name: Download and install sdkmanager
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -O commandlinetools.zip
+        unzip commandlinetools.zip -d $HOME/cmdline-tools
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest
+        mv $HOME/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+        export PATH=$ANDROID_HOME/platform-tools:$PATH
+        export PATH=$ANDROID_HOME/emulator:$PATH
+        sdkmanager --sdk_root=$ANDROID_HOME --install "platform-tools" "emulator" "system-images;android-tv;latest;google_apis"
+
+    - name: Create and start emulator
+      run: |
+        echo "no" | avdmanager --verbose create avd --force --name "android-tv-emulator" --package "system-images;android-tv;latest;google_apis" --device "tv_1080p"
+        $ANDROID_HOME/emulator/emulator -avd android-tv-emulator -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+        adb wait-for-device
+        adb shell input keyevent 82
+
+    - name: Wait for emulator to start
+      run: |
+        adb wait-for-device
+        adb shell getprop init.svc.bootanim | grep -m 1 stopped
+
+    - name: Save emulator screenshot
+      run: adb exec-out screencap -p > $GITHUB_WORKSPACE/emulator-screenshot.png
+
+    - name: Upload screenshot to artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: emulator-screenshot
+        path: $GITHUB_WORKSPACE/emulator-screenshot.png
