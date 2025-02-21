@@ -22,9 +22,10 @@ jobs:
     - name: Install Android tools and dependencies
       run: |
         sudo apt update
-        sudo apt -y install android-tools-adb pulseaudio ffmpeg libsm6 libxext6
+        sudo apt -y install android-tools-adb pulseaudio ffmpeg libsm6 libxext6 unzip
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-        tar -xvzf commandlinetools-linux-11076708_latest.zip
+        unzip commandlinetools-linux-11076708_latest.zip
+        rm -rf commandlinetools-linux-11076708_latest.zip
         sudo mv cmdline-tools /usr/lib/android-sdk/
         sudo ln -s /usr/lib/android-sdk/cmdline-tools /usr/lib/android-sdk/cmdline-tools/latest
         export ANDROID_HOME="/usr/lib/android-sdk"
