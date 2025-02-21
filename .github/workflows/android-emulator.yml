@@ -19,25 +19,28 @@ jobs:
         java-version: '11'
       continue-on-error: false
 
-    - name: Download and install sdkmanager
+    - name: Install Android tools and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget unzip
-        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -O commandlinetools.zip
-        unzip commandlinetools.zip -d $HOME/cmdline-tools
-        mkdir -p $HOME/android-sdk/cmdline-tools/latest
-        mv $HOME/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest
-        export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        export PATH=$ANDROID_HOME/platform-tools:$PATH
-        export PATH=$ANDROID_HOME/emulator:$PATH
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --install "platform-tools" "emulator" "system-images;android-tv;latest;google_apis"
+        sudo apt -y install android-tools-adb
+        sudo apt -y install google-android-cmdline-tools-9.0-installer
+        sudo apt -y install google-android-emulator-installer
+        sudo apt -y install pulseaudio ffmpeg libsm6 libxext6
+        yes | sudo sdkmanager --licenses
+        yes | sudo sdkmanager "system-images;android-35;google_atd;arm64-v8a"
+        yes | sudo sdkmanager "platforms;android-35"
+      continue-on-error: false
+
+    - name: Set environment variables
+      run: |
+        export ANDROID_HOME="/usr/lib/android-sdk/"
+        export ANDROID_SDK_ROOT="/usr/lib/android-sdk/"
       continue-on-error: false
 
     - name: Create and start emulator
       run: |
-        echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "android-tv-emulator" --package "system-images;android-tv;latest;google_apis" --device "tv_1080p"
-        $ANDROID_HOME/emulator/emulator -avd android-tv-emulator -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
+        sudo avdmanager create avd -n EmulatorTest -k "system-images;android-35;google_atd;arm64-v8a" -d "pixel_6_pro"
+        sudo emulator -avd EmulatorTest -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect &
         adb wait-for-device
         adb shell input keyevent 82
       continue-on-error: false
